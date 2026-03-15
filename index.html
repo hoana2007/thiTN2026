@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Đếm Ngược Thi TN THPT 2026</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Be+Vietnam+Pro:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #f5c842;
+      --gold-dim: #c8a020;
+      --cyan: #00e5ff;
+      --purple: #9b5de5;
+      --red-accent: #ff4d4d;
+      --glow-gold: 0 0 20px #f5c84288, 0 0 60px #f5c84244;
+      --glow-cyan: 0 0 15px #00e5ff88, 0 0 40px #00e5ff44;
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: 'Be Vietnam Pro', sans-serif;
+      color: #fff;
+    }
+
+    /* ─── SOLAR SYSTEM CANVAS ─── */
+    #solar-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+    }
+
+    /* ─── OVERLAY GRADIENT ─── */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background:
+        radial-gradient(ellipse 60% 50% at 50% 50%, rgba(0,0,0,0) 0%, rgba(0,0,30,0.75) 100%);
+      pointer-events: none;
+    }
+
+    /* ─── STAR FIELD ─── */
+    .stars {
+      position: fixed; inset: 0; z-index: 0;
+      overflow: hidden; pointer-events: none;
+    }
+    .stars span {
+      position: absolute;
+      border-radius: 50%;
+      background: #fff;
+      animation: twinkle var(--d) ease-in-out infinite alternate;
+    }
+    @keyframes twinkle {
+      from { opacity: var(--min); transform: scale(1); }
+      to   { opacity: 1; transform: scale(1.5); }
+    }
+
+    /* ─── MAIN UI ─── */
+    .ui {
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      gap: 32px;
+    }
+
+    /* ─── HEADER ─── */
+    .header {
+      text-align: center;
+      animation: fadeDown 1s ease both;
+    }
+    .header .badge {
+      display: inline-block;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      color: var(--cyan);
+      border: 1px solid var(--cyan);
+      padding: 4px 18px;
+      border-radius: 100px;
+      margin-bottom: 14px;
+      text-shadow: var(--glow-cyan);
+      box-shadow: var(--glow-cyan);
+      text-transform: uppercase;
+    }
+    .header .demnguoc {
+      display: inline-block;
+      font-family: 'Arial', monospace;
+      font-size: 2rem;
+      letter-spacing: 0.3em;
+      color: var(--cyan);
+      border: 1px solid var(--cyan);
+      padding: 4px 18px;
+      border-radius: 100px;
+      margin-bottom: 14px;
+      text-shadow: var(--glow-cyan);
+      box-shadow: var(--glow-cyan);
+      text-transform: uppercase;
+    }
+    .header h1 {
+      font-family: 'Consolas', monospace;
+      font-size: clamp(1.4rem, 5vw, 3rem);
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: 0.05em;
+      background: linear-gradient(135deg, #fff 0%, var(--gold) 50%, #fff 100%);
+      background-size: 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 3s linear infinite;
+      filter: drop-shadow(0 0 20px #f5c84266);
+    }
+    @keyframes shimmer {
+      from { background-position: 200% center; }
+      to   { background-position: -200% center; }
+    }
+    .header .subtitle {
+      margin-top: 8px;
+      font-size: clamp(0.75rem, 2vw, 1rem);
+      font-weight: 300;
+      color: rgba(255,255,255,0.65);
+      letter-spacing: 0.15em;
+    }
+    .header .date-range {
+      margin-top: 10px;
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(0.65rem, 2vw, 0.85rem);
+      color: var(--gold);
+      letter-spacing: 0.2em;
+      text-shadow: var(--glow-gold);
+    }
+
+    /* ─── COUNTDOWN GRID ─── */
+    .countdown-wrap {
+      animation: fadeUp 1s 0.3s ease both;
+    }
+    .countdown {
+      display: flex;
+      gap: clamp(10px, 3vw, 24px);
+      align-items: center;
+    }
+    .time-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .time-card {
+      position: relative;
+      width: clamp(72px, 18vw, 130px);
+      height: clamp(80px, 20vw, 140px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 20, 50, 0.55);
+      border: 1px solid rgba(245, 200, 66, 0.3);
+      border-radius: 16px;
+      backdrop-filter: blur(12px);
+      box-shadow:
+        0 0 0 1px rgba(245,200,66,0.08),
+        0 8px 32px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.08);
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+    .time-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(245,200,66,0.06) 0%, transparent 60%);
+      border-radius: inherit;
+    }
+    .time-card.pulse {
+      animation: cardPulse 0.15s ease;
+    }
+    @keyframes cardPulse {
+      0%   { border-color: rgba(245,200,66,0.8); box-shadow: 0 0 30px rgba(245,200,66,0.4); }
+      100% { border-color: rgba(245,200,66,0.3); box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+    }
+
+    .time-value {
+      position: relative;
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(2rem, 7vw, 4.5rem);
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+      text-shadow: 0 0 30px rgba(245,200,66,0.6);
+      letter-spacing: -0.02em;
+      transition: all 0.2s;
+    }
+    .time-value.flip {
+      animation: flipNum 0.25s ease;
+    }
+    @keyframes flipNum {
+      0%   { transform: translateY(-8px) scale(1.1); opacity: 0.5; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    .time-label {
+      font-size: clamp(0.55rem, 1.8vw, 0.75rem);
+      letter-spacing: 0.25em;
+      color: rgba(245, 200, 66, 0.8);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .separator {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(1.8rem, 6vw, 3.5rem);
+      font-weight: 900;
+      color: var(--gold);
+      text-shadow: var(--glow-gold);
+      margin-bottom: 30px;
+      animation: blink 1s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    /* ─── PROGRESS BAR ─── */
+    .progress-section {
+      width: clamp(280px, 80vw, 620px);
+      animation: fadeUp 1s 0.5s ease both;
+    }
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 8px;
+    }
+    .progress-track {
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--cyan), var(--gold));
+      border-radius: 100px;
+      box-shadow: 0 0 12px var(--gold);
+      transition: width 1s ease;
+    }
+
+    /* ─── EXAM SCHEDULE ─── */
+    .schedule {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fadeUp 1s 0.7s ease both;
+    }
+    .schedule-card {
+      background: rgba(0, 20, 60, 0.5);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      padding: 14px 22px;
+      backdrop-filter: blur(10px);
+      text-align: center;
+      min-width: 140px;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .schedule-card:hover {
+      border-color: var(--gold);
+      transform: translateY(-3px);
+      box-shadow: var(--glow-gold);
+    }
+    .schedule-card .day-label {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.25em;
+      color: var(--cyan);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .schedule-card .day-date {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--gold);
+      text-shadow: var(--glow-gold);
+    }
+    .schedule-card .day-subjects {
+      margin-top: 6px;
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 0.05em;
+      line-height: 1.6;
+    }
+
+    /* ─── MOTIVATIONAL TEXT ─── */
+    .motto {
+      font-size: clamp(0.7rem, 2vw, 0.85rem);
+      color: rgba(255,255,255,0.4);
+      letter-spacing: 0.12em;
+      text-align: center;
+      font-style: italic;
+      animation: fadeUp 1s 0.9s ease both;
+      min-height: 1.6em;
+      transition: opacity 0.6s ease;
+    }
+    .motto.fade-out { opacity: 0; transform: translateY(6px); }
+    .motto.fade-in  { opacity: 1; transform: translateY(0); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .motto span { color: var(--gold); opacity: 0.9; font-style: normal; }
+
+    /* ─── DONE STATE ─── */
+    .done-msg {
+      display: none;
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(1.2rem, 4vw, 2.5rem);
+      font-weight: 900;
+      color: var(--gold);
+      text-shadow: var(--glow-gold);
+      text-align: center;
+      animation: pulse-glow 1.5s ease infinite alternate;
+    }
+    @keyframes pulse-glow {
+      from { filter: drop-shadow(0 0 10px #f5c842); }
+      to   { filter: drop-shadow(0 0 40px #f5c842); }
+    }
+
+    /* ─── KEYFRAMES ─── */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 480px) {
+      .separator { display: none; }
+      .countdown { gap: 8px; }
+      .schedule { gap: 8px; }
+      .schedule-card { min-width: 120px; padding: 10px 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Stars -->
+<div class="stars" id="stars"></div>
+
+<!-- Solar System Canvas -->
+<canvas id="solar-canvas"></canvas>
+
+<!-- Overlay -->
+<div class="overlay"></div>
+
+<!-- UI -->
+<div class="ui">
+
+  <!-- Header -->
+  <div class="header">
+    <table>
+      <tr>
+        <td>
+          <div>
+            <img src="logo.png" width="100px" height="100px">
+          </div>
+        </td>
+        <td>
+          <div>
+            <div class="badge">
+              TRƯỜNG THPT SƠN LƯƠNG
+            </div>
+          </div>
+        </td>
+      </tr>
+    </table>
+    <h1>⚡THI TN THPT NĂM 2026</h1>
+    <p class="subtitle">LỊCH LÀM VIỆC : </p>
+    <p class="date-range">📅 14h00 ngày 10/06: Làm thủ tục đăng ký dự thi</p>
+  </div>
+  <!-- Schedule -->
+  <div class = 'header'>
+    <div class="badge">NGÀY THI: </div>
+  </div> 
+  <div class="schedule">
+    <div class="schedule-card">
+      <div class="day-label">Ngày 1</div>
+      <div class="day-date">11 / 06</div>
+      <div class="day-subjects">Sáng: Ngữ Văn<br>Chiều: Toán</div>
+    </div>
+    <div class="schedule-card">
+      <div class="day-label">Ngày 2</div>
+      <div class="day-date">12 / 06</div>
+      <div class="day-subjects">Bài thi tự chọn</div>
+    </div>
+  </div>
+  <div class = 'header'>
+    <div class="demnguoc">Đếm ngược đến ngày thi: </div>
+  </div>
+  <!-- Countdown -->
+  <div class="countdown-wrap">
+    <div class="countdown" id="countdown">
+      <div class="time-block">
+        <div class="time-card" id="card-days">
+          <span class="time-value" id="days">000</span>
+        </div>
+        <span class="time-label">Ngày</span>
+      </div>
+      <div class="separator">:</div>
+      <div class="time-block">
+        <div class="time-card" id="card-hours">
+          <span class="time-value" id="hours">00</span>
+        </div>
+        <span class="time-label">Giờ</span>
+      </div>
+      <div class="separator">:</div>
+      <div class="time-block">
+        <div class="time-card" id="card-mins">
+          <span class="time-value" id="mins">00</span>
+        </div>
+        <span class="time-label">Phút</span>
+      </div>
+      <div class="separator">:</div>
+      <div class="time-block">
+        <div class="time-card" id="card-secs">
+          <span class="time-value" id="secs">00</span>
+        </div>
+        <span class="time-label">Giây</span>
+      </div>
+    </div>
+    <div class="done-msg" id="done-msg">🎉 Kỳ Thi Đã Bắt Đầu! Chúc Thi Tốt! 🎉</div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="progress-section">
+    <div class="progress-info">
+      <span id="progress-start">Hôm nay</span>
+      <span id="progress-pct">0%</span>
+      <span>11/06/2026</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- Motto -->
+  <p class="motto" id="motto"></p>
+
+</div>
+<div style="position: fixed; bottom: 12px; right: 12px; font-size: 0.65rem; color: rgba(255,255,255,0.5); z-index: 10; text-align: right;">
+                    <h5 id = "h3">Authors:</h5>
+                    <br>
+                    Code github: <a href = "https://github.com/hoana2007/thiTN2026" target="_blank">hoana2007/thiTN2026</a>
+                    <br>
+                    by: <a href="https://hoana2007.wordpress.com/" target="_blank">&copy;hoana2007</a> 
+                    <br>
+                    <a href="https://info.flagcounter.com/1rAZ"><img src="https://s01.flagcounter.com/count2/1rAZ/bg_FFFFFF/txt_000000/border_CCCCCC/columns_2/maxflags_10/viewers_0/labels_0/pageviews_0/flags_0/percent_0/" alt="Flag Counter" border="0"></a>
+</div>
+
+<script>
+// ─── STARS ────────────────────────────────────────────────
+const starsEl = document.getElementById('stars');
+for (let i = 0; i < 160; i++) {
+  const s = document.createElement('span');
+  const size = Math.random() * 2.5 + 0.5;
+  const dur = (Math.random() * 4 + 2).toFixed(2);
+  const minOp = (Math.random() * 0.3 + 0.05).toFixed(2);
+  s.style.cssText = `
+    left:${Math.random()*100}%;top:${Math.random()*100}%;
+    width:${size}px;height:${size}px;
+    --d:${dur}s;--min:${minOp};
+    animation-delay:${(Math.random()*5).toFixed(2)}s;
+  `;
+  starsEl.appendChild(s);
+}
+
+// ─── SOLAR SYSTEM ─────────────────────────────────────────
+const canvas = document.getElementById('solar-canvas');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// Sun + Planets config
+const SUN_R = 38;
+const planets = [
+  { name:'Mercury', color:'#b5b5b5', r:5,  orbit:80,  speed:0.047, angle:0,   tilt:0 },
+  { name:'Venus',   color:'#e8cda0', r:9,  orbit:130, speed:0.035, angle:1.5, tilt:0 },
+  { name:'Earth',   color:'#4fa3e0', r:10, orbit:190, speed:0.029, angle:3.1, tilt:0,
+    moon:{ color:'#ccc', r:3, orbit:22, speed:0.13, angle:0 } },
+  { name:'Mars',    color:'#c1440e', r:7,  orbit:250, speed:0.024, angle:5,   tilt:0 },
+  { name:'Jupiter', color:'#c88b3a', r:20, orbit:330, speed:0.013, angle:0.8, tilt:0,
+    bands: true },
+  { name:'Saturn',  color:'#e4d191', r:16, orbit:420, speed:0.009, angle:2.4, tilt:0.45,
+    ring: true },
+  { name:'Uranus',  color:'#7de8e8', r:11, orbit:500, speed:0.006, angle:4.1, tilt:0 },
+  { name:'Neptune', color:'#3f54ba', r:10, orbit:570, speed:0.005, angle:1.0, tilt:0 },
+];
+
+// Comet
+const comet = { x:0, y:0, vx:0, vy:0, trail:[], active:false, timer:0, delay:300 };
+
+function launchComet() {
+  const side = Math.floor(Math.random()*4);
+  const w = canvas.width, h = canvas.height;
+  if (side===0) { comet.x = Math.random()*w; comet.y = -20; }
+  else if (side===1) { comet.x = w+20; comet.y = Math.random()*h; }
+  else if (side===2) { comet.x = Math.random()*w; comet.y = h+20; }
+  else { comet.x = -20; comet.y = Math.random()*h; }
+  const speed = 4 + Math.random()*4;
+  const angle = Math.atan2(h/2 - comet.y, w/2 - comet.x) + (Math.random()-0.5)*0.5;
+  comet.vx = Math.cos(angle)*speed;
+  comet.vy = Math.sin(angle)*speed;
+  comet.trail = [];
+  comet.active = true;
+}
+
+function drawSun(cx, cy) {
+  // Outer glow layers
+  for (let i = 5; i >= 1; i--) {
+    const g = ctx.createRadialGradient(cx,cy,SUN_R*0.5, cx,cy, SUN_R*(1+i*0.6));
+    g.addColorStop(0, `rgba(255,200,50,${0.04/i})`);
+    g.addColorStop(1, 'rgba(255,100,0,0)');
+    ctx.beginPath(); ctx.arc(cx,cy,SUN_R*(1+i*0.6),0,Math.PI*2);
+    ctx.fillStyle = g; ctx.fill();
+  }
+  // Core
+  const sg = ctx.createRadialGradient(cx-8,cy-8,2, cx,cy,SUN_R);
+  sg.addColorStop(0,'#fff9c4');
+  sg.addColorStop(0.3,'#ffd54f');
+  sg.addColorStop(0.7,'#ff8f00');
+  sg.addColorStop(1,'#e65100');
+  ctx.beginPath(); ctx.arc(cx,cy,SUN_R,0,Math.PI*2);
+  ctx.fillStyle = sg; ctx.fill();
+}
+
+function drawOrbit(cx, cy, r) {
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1; ctx.stroke();
+}
+
+function drawPlanet(p, cx, cy) {
+  const px = cx + Math.cos(p.angle) * p.orbit;
+  const py = cy + Math.sin(p.angle) * p.orbit;
+
+  // Saturn ring
+  if (p.ring) {
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(p.tilt);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, p.r*2.6, p.r*0.6, 0, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(228,209,145,0.55)';
+    ctx.lineWidth = 5; ctx.stroke();
+    ctx.restore();
+  }
+
+  // Planet glow
+  const pg = ctx.createRadialGradient(px-p.r*0.3,py-p.r*0.3,0, px,py,p.r*1.8);
+  pg.addColorStop(0, p.color+'44');
+  pg.addColorStop(1, 'transparent');
+  ctx.beginPath(); ctx.arc(px,py,p.r*1.8,0,Math.PI*2);
+  ctx.fillStyle = pg; ctx.fill();
+
+  // Body
+  const bg = ctx.createRadialGradient(px-p.r*0.35,py-p.r*0.35, p.r*0.1, px,py,p.r);
+  bg.addColorStop(0,'#fff');
+  bg.addColorStop(0.2, p.color);
+  bg.addColorStop(1,'#000');
+  ctx.beginPath(); ctx.arc(px,py,p.r,0,Math.PI*2);
+  ctx.fillStyle = bg; ctx.fill();
+
+  // Jupiter bands
+  if (p.bands) {
+    ctx.save();
+    ctx.beginPath(); ctx.arc(px,py,p.r,0,Math.PI*2); ctx.clip();
+    for (let b = -p.r; b < p.r; b += 5) {
+      ctx.fillStyle = b%10===0 ? 'rgba(160,80,30,0.3)' : 'rgba(255,220,150,0.15)';
+      ctx.fillRect(px-p.r, py+b, p.r*2, 4);
+    }
+    ctx.restore();
+  }
+
+  // Moon
+  if (p.moon) {
+    const m = p.moon;
+    m.angle += m.speed * 0.016;
+    const mx = px + Math.cos(m.angle)*m.orbit;
+    const my = py + Math.sin(m.angle)*m.orbit;
+    ctx.beginPath(); ctx.arc(mx,my,m.r,0,Math.PI*2);
+    ctx.fillStyle = m.color; ctx.fill();
+  }
+
+  p.angle += p.speed * 0.016;
+  return { px, py };
+}
+
+function drawComet() {
+  if (!comet.active) return;
+  comet.trail.unshift({ x:comet.x, y:comet.y });
+  if (comet.trail.length > 30) comet.trail.pop();
+  for (let i = 0; i < comet.trail.length; i++) {
+    const t = comet.trail[i];
+    const alpha = (1 - i/comet.trail.length) * 0.7;
+    const size  = (1 - i/comet.trail.length) * 3;
+    ctx.beginPath(); ctx.arc(t.x, t.y, size, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(220,240,255,${alpha})`; ctx.fill();
+  }
+  ctx.beginPath(); ctx.arc(comet.x,comet.y,3.5,0,Math.PI*2);
+  ctx.fillStyle='#fff'; ctx.fill();
+  comet.x += comet.vx; comet.y += comet.vy;
+  if (comet.x<-50||comet.x>canvas.width+50||comet.y<-50||comet.y>canvas.height+50) {
+    comet.active = false; comet.timer = 0;
+  }
+}
+
+let lastTime = 0;
+function animate(ts) {
+  const dt = ts - lastTime; lastTime = ts;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  const cx = canvas.width/2, cy = canvas.height/2;
+
+  // Subtle nebula bg
+  const nb = ctx.createRadialGradient(cx,cy,0,cx,cy,Math.max(cx,cy));
+  nb.addColorStop(0,'rgba(5,5,30,0)');
+  nb.addColorStop(1,'rgba(0,0,10,0.4)');
+  ctx.fillStyle=nb; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  // Orbits
+  planets.forEach(p => drawOrbit(cx,cy,p.orbit));
+
+  // Sun
+  drawSun(cx,cy);
+
+  // Planets
+  planets.forEach(p => drawPlanet(p,cx,cy));
+
+  // Comet
+  comet.timer++;
+  if (!comet.active && comet.timer > comet.delay) launchComet();
+  drawComet();
+
+  requestAnimationFrame(animate);
+}
+requestAnimationFrame(t => { lastTime = t; animate(t); });
+
+// ─── COUNTDOWN ────────────────────────────────────────────
+const TARGET = new Date('2026-06-11T07:30:00+07:00').getTime();
+const START  = Date.now();
+
+const elDays  = document.getElementById('days');
+const elHours = document.getElementById('hours');
+const elMins  = document.getElementById('mins');
+const elSecs  = document.getElementById('secs');
+const elDone  = document.getElementById('done-msg');
+const elCD    = document.getElementById('countdown');
+const elFill  = document.getElementById('progress-fill');
+const elPct   = document.getElementById('progress-pct');
+
+let prevSecs=-1, prevMins=-1, prevHours=-1, prevDays=-1;
+
+function pad(n,len=2){ return String(n).padStart(len,'0'); }
+
+function flipCard(id,elVal){
+  const card = document.getElementById('card-'+id);
+  elVal.classList.remove('flip'); void elVal.offsetWidth;
+  elVal.classList.add('flip');
+  card.classList.remove('pulse'); void card.offsetWidth;
+  card.classList.add('pulse');
+}
+
+function tick() {
+  const now  = Date.now();
+  const diff = TARGET - now;
+
+  if (diff <= 0) {
+    elCD.style.display='none';
+    elDone.style.display='block';
+    elFill.style.width='100%'; elPct.textContent='100%';
+    return;
+  }
+
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000)  / 60000);
+  const s = Math.floor((diff % 60000)    / 1000);
+
+  if (s !== prevSecs) { elSecs.textContent=pad(s); flipCard('secs',elSecs); prevSecs=s; }
+  if (m !== prevMins) { elMins.textContent=pad(m); flipCard('mins',elMins); prevMins=m; }
+  if (h !== prevHours){ elHours.textContent=pad(h); flipCard('hours',elHours); prevHours=h; }
+  if (d !== prevDays) { elDays.textContent=pad(d,2); flipCard('days',elDays); prevDays=d; }
+
+  // Progress
+  const total = TARGET - START;
+  const elapsed = now - START;
+  const pct = Math.min(100, Math.max(0, (elapsed/total)*100));
+  elFill.style.width = pct.toFixed(2)+'%';
+  elPct.textContent  = pct.toFixed(1)+'%';
+}
+
+// ─── MOTIVATIONAL QUOTES ──────────────────────────────────
+const quotes = [
+  { text: 'Mỗi giây trôi qua là', highlight: 'một bước tiến gần hơn', end: 'đến ước mơ của bạn.', icon: '✨' },
+  { text: 'Hãy tin vào bản thân —', highlight: 'bạn đã cố gắng đến đây', end: 'và bạn sẽ vượt qua!', icon: '💪' },
+  { text: 'Không có con đường nào', highlight: 'trải đầy hoa hồng,', end: 'nhưng đích đến xứng đáng với từng bước đi.', icon: '🌹' },
+  { text: 'Nỗ lực hôm nay là nền tảng cho', highlight: 'thành công ngày mai.', end: 'Đừng bỏ cuộc!', icon: '🚀' },
+  { text: 'Mỗi trang sách bạn đọc hôm nay là', highlight: 'một viên gạch xây dựng', end: 'tương lai rực rỡ.', icon: '📚' },
+  { text: 'Khó khăn chỉ là thử thách tạm thời —', highlight: 'bản lĩnh của bạn', end: 'mới là điều trường tồn.', icon: '⚡' },
+  { text: 'Hãy ôn tập với cả trái tim,', highlight: 'kết quả sẽ xứng đáng', end: 'với tâm huyết bạn bỏ ra.', icon: '❤️' },
+  { text: 'Giấc mơ của bạn đang chờ phía trước,', highlight: 'chỉ cần thêm một chút nỗ lực', end: 'là bạn chạm tới!', icon: '🌟' },
+  { text: 'Áp lực tạo ra kim cương —', highlight: 'bạn đang trở nên', end: 'quý giá hơn mỗi ngày.', icon: '💎' },
+  { text: 'Thầy cô và gia đình luôn', highlight: 'tin tưởng và đồng hành', end: 'cùng bạn trên chặng đường này.', icon: '🏠' },
+  { text: 'Ngủ đủ giấc, ăn đủ no,', highlight: 'đầu óc minh mẫn', end: 'mới chinh phục được đề thi.', icon: '😴' },
+  { text: 'Sự chuẩn bị kỹ lưỡng hôm nay', highlight: 'là chìa khóa vàng', end: 'mở cánh cửa tương lai.', icon: '🔑' },
+  { text: 'Mọi bài toán đều sẽ có đáp án, mọi câu hỏi đều có câu trả lời nên hãy bình tĩnh, tự tin làm bài thật tốt nhé!', highlight: 'Bạn có thể làm được!', end: '', icon: '🎯' },
+  { text: 'Biết rằng bạn đã rất nỗ lực trong 12 năm qua, chỉ cần cố gắng thêm 2 ngày nữa thôi rồi mọi thành quả sẽ đến, cố lên!', highlight: 'Bạn có thể làm được!', end: '', icon: '💪' },
+  { text: 'Chúc cậu làm bài thi “nhanh như chớp”, khoanh đáp án nào đúng đáp án đó khiến giám thị cũng phải trầm trồ!', highlight: 'Bạn có thể làm được!', end: '', icon: '🎯' }
+    
+];
+
+let quoteIndex = 0;
+const mottoEl = document.getElementById('motto');
+
+function renderQuote(q) {
+  mottoEl.innerHTML = `${q.icon} "${q.text} <span>${q.highlight}</span> ${q.end}" ${q.icon}`;
+}
+
+function cycleQuote() {
+  mottoEl.classList.add('fade-out');
+  mottoEl.classList.remove('fade-in');
+  setTimeout(() => {
+    quoteIndex = (quoteIndex + 1) % quotes.length;
+    renderQuote(quotes[quoteIndex]);
+    mottoEl.classList.remove('fade-out');
+    mottoEl.classList.add('fade-in');
+  }, 650);
+}
+
+// Init
+renderQuote(quotes[0]);
+mottoEl.classList.add('fade-in');
+setInterval(cycleQuote, 5000);
+
+tick();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>
