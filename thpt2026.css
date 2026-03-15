@@ -1,0 +1,343 @@
+/* ════════════════════════════════════════════════
+   TN THPT 2026 — Countdown Stylesheet
+   ════════════════════════════════════════════════ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ─── CSS VARIABLES ─── */
+:root {
+  --gold:       #f5c842;
+  --gold-dim:   #c8a020;
+  --cyan:       #00e5ff;
+  --purple:     #9b5de5;
+  --red-accent: #ff4d4d;
+  --glow-gold:  0 0 20px #f5c84288, 0 0 60px #f5c84244;
+  --glow-cyan:  0 0 15px #00e5ff88, 0 0 40px #00e5ff44;
+}
+
+/* ─── BASE ─── */
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: #000;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  color: #fff;
+}
+
+/* ─── SOLAR SYSTEM CANVAS ─── */
+#solar-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+}
+
+/* ─── OVERLAY GRADIENT ─── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(0,0,0,0) 0%, rgba(0,0,30,0.75) 100%);
+  pointer-events: none;
+}
+
+/* ─── STAR FIELD ─── */
+.stars {
+  position: fixed; inset: 0; z-index: 0;
+  overflow: hidden; pointer-events: none;
+}
+.stars span {
+  position: absolute;
+  border-radius: 50%;
+  background: #fff;
+  animation: twinkle var(--d) ease-in-out infinite alternate;
+}
+@keyframes twinkle {
+  from { opacity: var(--min); transform: scale(1); }
+  to   { opacity: 1; transform: scale(1.5); }
+}
+
+/* ─── SCALE WRAPPER ─── */
+/* Desktop design width = 900px. JS scales this down on small screens. */
+.ui-scaler {
+  position: relative;
+  z-index: 10;
+  width: 900px;
+  transform-origin: top center;
+}
+
+/* ─── MAIN UI ─── */
+.ui {
+  width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 20px 32px;
+  gap: 28px;
+}
+
+/* ─── HEADER ─── */
+.header {
+  text-align: center;
+  animation: fadeDown 1s ease both;
+}
+.header .badge {
+  display: inline-block;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+  color: var(--cyan);
+  border: 1px solid var(--cyan);
+  padding: 4px 18px;
+  border-radius: 100px;
+  margin-bottom: 14px;
+  text-shadow: var(--glow-cyan);
+  box-shadow: var(--glow-cyan);
+  text-transform: uppercase;
+}
+  .header .demnguoc {
+      display: inline-block;
+      font-family: 'Arial', monospace;
+      font-size: 2rem;
+      letter-spacing: 0.3em;
+      color: var(--cyan);
+      border: 1px solid var(--cyan);
+      padding: 4px 18px;
+      border-radius: 100px;
+      margin-bottom: 14px;
+      text-shadow: var(--glow-cyan);
+      box-shadow: var(--glow-cyan);
+      text-transform: uppercase;
+  }
+.header h1 {
+  font-family: 'Orbitron', monospace;
+  font-size: 3rem;
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, #fff 0%, var(--gold) 50%, #fff 100%);
+  background-size: 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3s linear infinite;
+  filter: drop-shadow(0 0 20px #f5c84266);
+}
+@keyframes shimmer {
+  from { background-position: 200% center; }
+  to   { background-position: -200% center; }
+}
+.header .subtitle {
+  margin-top: 8px;
+  font-size: 0.95rem;
+  font-weight: 300;
+  color: rgba(255,255,255,0.65);
+  letter-spacing: 0.15em;
+}
+.header .date-range {
+  margin-top: 10px;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.82rem;
+  color: var(--gold);
+  letter-spacing: 0.2em;
+  text-shadow: var(--glow-gold);
+}
+
+/* ─── COUNTDOWN GRID ─── */
+.countdown-wrap {
+  animation: fadeUp 1s 0.3s ease both;
+}
+.countdown {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+.time-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.time-card {
+  position: relative;
+  width: 130px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 20, 50, 0.55);
+  border: 1px solid rgba(245, 200, 66, 0.3);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 0 0 1px rgba(245,200,66,0.08),
+    0 8px 32px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+.time-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(245,200,66,0.06) 0%, transparent 60%);
+  border-radius: inherit;
+}
+.time-card.pulse { animation: cardPulse 0.15s ease; }
+@keyframes cardPulse {
+  0%   { border-color: rgba(245,200,66,0.8); box-shadow: 0 0 30px rgba(245,200,66,0.4); }
+  100% { border-color: rgba(245,200,66,0.3); box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+}
+
+.time-value {
+  position: relative;
+  font-family: 'Orbitron', monospace;
+  font-size: 4rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+  text-shadow: 0 0 30px rgba(245,200,66,0.6);
+  letter-spacing: -0.02em;
+  transition: all 0.2s;
+}
+.time-value.flip { animation: flipNum 0.25s ease; }
+@keyframes flipNum {
+  0%   { transform: translateY(-8px) scale(1.1); opacity: 0.5; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.time-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.25em;
+  color: rgba(245, 200, 66, 0.8);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.separator {
+  font-family: 'Orbitron', monospace;
+  font-size: 3.2rem;
+  font-weight: 900;
+  color: var(--gold);
+  text-shadow: var(--glow-gold);
+  margin-bottom: 28px;
+  animation: blink 1s ease-in-out infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+/* ─── PROGRESS BAR ─── */
+.progress-section {
+  width: 620px;
+  animation: fadeUp 1s 0.5s ease both;
+}
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.45);
+  margin-bottom: 8px;
+}
+.progress-track {
+  height: 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 100px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--cyan), var(--gold));
+  border-radius: 100px;
+  box-shadow: 0 0 12px var(--gold);
+  transition: width 1s ease;
+}
+
+/* ─── EXAM SCHEDULE ─── */
+.schedule {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  animation: fadeUp 1s 0.7s ease both;
+}
+.schedule-card {
+  background: rgba(0, 20, 60, 0.5);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  padding: 16px 28px;
+  backdrop-filter: blur(10px);
+  text-align: center;
+  min-width: 160px;
+  transition: border-color 0.3s, transform 0.3s;
+}
+.schedule-card:hover {
+  border-color: var(--gold);
+  transform: translateY(-3px);
+  box-shadow: var(--glow-gold);
+}
+.schedule-card .day-label {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.25em;
+  color: var(--cyan);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.schedule-card .day-date {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--gold);
+  text-shadow: var(--glow-gold);
+}
+.schedule-card .day-subjects {
+  margin-top: 8px;
+  font-size: 0.68rem;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.05em;
+  line-height: 1.7;
+}
+
+/* ─── MOTIVATIONAL TEXT ─── */
+.motto {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.12em;
+  text-align: center;
+  font-style: italic;
+  animation: fadeUp 1s 0.9s ease both;
+  min-height: 1.6em;
+  max-width: 680px;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.motto.fade-out { opacity: 0; transform: translateY(6px); }
+.motto.fade-in  { opacity: 1; transform: translateY(0); }
+.motto span { color: var(--gold); opacity: 0.9; font-style: normal; }
+
+/* ─── DONE STATE ─── */
+.done-msg {
+  display: none;
+  font-family: 'Orbitron', monospace;
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: var(--gold);
+  text-shadow: var(--glow-gold);
+  text-align: center;
+  animation: pulse-glow 1.5s ease infinite alternate;
+}
+@keyframes pulse-glow {
+  from { filter: drop-shadow(0 0 10px #f5c842); }
+  to   { filter: drop-shadow(0 0 40px #f5c842); }
+}
+
+/* ─── SHARED KEYFRAMES ─── */
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
